@@ -1,103 +1,186 @@
-import Image from "next/image";
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 
-export default function Home() {
+// Import components
+import Header from './components/Header';
+import SearchBar from './components/SearchBar';
+import CategoryFilter from './components/CategoryFilter';
+import PropertyCard from './components/PropertyCard';
+import Footer from './components/Footer';
+
+// Import server actions
+import { getFeaturedProperties, searchProperties } from './actions';
+
+// Import types
+import { IPropertyCard } from '@/types';
+
+// Import icons
+import { 
+  BuildingOfficeIcon,
+  HomeIcon,
+  BanknotesIcon,
+  BuildingLibraryIcon,
+  BuildingStorefrontIcon,
+  BuildingOffice2Icon,
+  AcademicCapIcon,
+ 
+} from '@heroicons/react/24/outline';
+import { Building, Building2Icon, ShipWheelIcon } from 'lucide-react';
+
+// Data for categories
+const categories = [
+  { id: 'apartments', name: 'Apartments', icon: <BuildingOfficeIcon className="h-6 w-6" /> },
+  { id: 'houses', name: 'Independent Houses', icon: <HomeIcon className="h-6 w-6" /> },
+  { id: 'villas', name: 'Villas', icon: <BanknotesIcon className="h-6 w-6" /> },
+  { id: 'farmhouses', name: 'Farmhouses', icon: <BuildingLibraryIcon className="h-6 w-6" /> },
+  { id: 'bungalows', name: 'Bungalows', icon: <BuildingStorefrontIcon className="h-6 w-6" /> },
+  { id: 'cottages', name: 'Cottages', icon: <BuildingOffice2Icon className="h-6 w-6" /> },
+  { id: 'guesthouses', name: 'Guest Houses', icon: <AcademicCapIcon className="h-6 w-6" /> },
+  { id: 'boathouses', name: 'Boathouses', icon: <ShipWheelIcon className="h-6 w-6" /> },
+  { id: 'studio', name: 'Studio Apartments', icon: <Building2Icon className="h-6 w-6" /> },
+  { id: 'penthouses', name: 'Penthouses', icon: <Building className="h-6 w-6" /> },
+];
+
+
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  const {location, checkIn, checkOut, guests, category} = await searchParams;
+  
+  // Check if we have any search parameters
+  const hasSearchParams = location || checkIn || checkOut || guests || category;
+  
+  // Fetch properties based on search parameters or featured properties if no search
+  const properties = hasSearchParams 
+    ? await searchProperties(location, checkIn, checkOut, guests, category)
+    : await getFeaturedProperties();
+  
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen flex flex-col bg-white">
+      <Header />
+      
+      {/* Hero Section with Search */}
+      <section id="search-section" className="pt-8 pb-6 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Find your perfect getaway</h1>
+            <p className="text-gray-600 max-w-2xl mx-auto">Discover unique stays across India to live, work, or just relax.</p>
+          </div>
+          
+          <SearchBar />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+      
+      {/* Category Filter */}
+      <section className="py-6 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto">
+          <CategoryFilter categories={categories} />
+        </div>
+      </section>
+      
+      {/* Properties Section */}
+      <section className="py-12 px-4 md:px-8 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold">
+              {hasSearchParams ? 'Search Results' : 'Featured Properties'}
+            </h2>
+          </div>
+
+          {properties.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-gray-500">
+                {hasSearchParams 
+                  ? 'No properties match your search criteria' 
+                  : 'No properties found'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              {properties.map((property) => (
+                <PropertyCard 
+                  key={property._id} 
+                  _id={property._id}
+                  title={property.title}
+                  location={property.location}
+                  price={property.price}
+                  rating={property.rating}
+                  imageUrl={property.imageUrl}
+                  host={property.host}
+                />
+              ))}
+            </div>
+          )}
+          
+          {!hasSearchParams && properties.length > 0 && (
+            <div className="mt-12 text-center">
+              <Link href="/?showAll=true" className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-300 shadow-sm">
+                Show more properties
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+      
+      {/* Experience Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+            <div className="md:w-1/2">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Experience the extraordinary</h2>
+              <p className="text-gray-600 mb-6">Unique activities hosted by locals across India, created for the curious.</p>
+              <Link href="/experiences" className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-300 shadow-sm">
+                Explore experiences
+              </Link>
+            </div>
+            
+            <div className="md:w-1/2 relative h-80 w-full rounded-2xl overflow-hidden">
+              <Image 
+                src="https://images.unsplash.com/photo-1506461883276-594a12b11cf3?q=80&w=1470&auto=format&fit=crop"
+                alt="Experience India" 
+                fill 
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Hosting Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row-reverse items-center justify-between gap-12">
+            <div className="md:w-1/2">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Become a host</h2>
+              <p className="text-gray-600 mb-6">Earn extra income and unlock new opportunities by sharing your space with travelers from around the world.</p>
+              <Link href="/host" className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-300 shadow-sm">
+                Learn more
+              </Link>
+            </div>
+            
+            <div className="md:w-1/2 relative h-80 w-full rounded-2xl overflow-hidden">
+              <Image 
+                src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1470&auto=format&fit=crop"
+                alt="Become a host" 
+                fill 
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <Footer />
     </div>
   );
 }
+
+
