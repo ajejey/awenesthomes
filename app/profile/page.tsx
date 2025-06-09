@@ -1,8 +1,7 @@
 import React from 'react';
-import { getCurrentUser } from '@/app/auth.js';
-// Use explicit relative imports with file extension
-import { getUserProfile } from './actions.js';
-import ProfileTabs from './components/ProfileTabs.js';
+import { getCurrentUser } from '@/app/auth';
+import { getUserProfile } from './actions';
+import ProfileTabs from './components/ProfileTabs';
 
 export default async function ProfilePage() {
   // Get the current user from the JWT token

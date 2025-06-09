@@ -4,7 +4,7 @@ import { BookingConfirmationDetails, BookingConfirmationSkeleton } from './compo
 import { getBookingById } from '../../actions';
 import { getCurrentUser } from '@/app/auth';
 
-interface BookingConfirmationPageProps {
+type BookingConfirmationPageProps = {
   params: {
     id: string;
   };
