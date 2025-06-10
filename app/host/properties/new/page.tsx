@@ -71,10 +71,10 @@ const propertyFormSchema = z.object({
     serviceFee: z.number().min(0, 'Service fee cannot be negative').default(0),
     taxRate: z.number().min(0, 'Tax rate cannot be negative').max(100, 'Tax rate cannot exceed 100%').default(18),
     minimumStay: z.number().min(1, 'Minimum stay must be at least 1 night').default(1),
-    maximumStay: z.number().min(1, 'Maximum stay must be at least 1 night').optional(),
+    maximumStay: z.number().min(1, 'Maximum stay must be at least 1 night').default(1).optional(),
     discounts: z.object({
-      weekly: z.number().min(0, 'Weekly discount cannot be negative').max(100, 'Weekly discount cannot exceed 100%').optional(),
-      monthly: z.number().min(0, 'Monthly discount cannot be negative').max(100, 'Monthly discount cannot exceed 100%').optional(),
+      weekly: z.number().min(0, 'Weekly discount cannot be negative').max(100, 'Weekly discount cannot exceed 100%').default(1).optional(),
+      monthly: z.number().min(0, 'Monthly discount cannot be negative').max(100, 'Monthly discount cannot exceed 100%').default(1).optional(),
     }).optional(),
   }),
   
@@ -132,10 +132,10 @@ export default function CreatePropertyPage() {
         taxRate: 18,
         minimumStay: 1,
         discounts: {
-          weekly: undefined,
-          monthly: undefined
+          weekly: 0,
+          monthly: 0
         },
-        maximumStay: undefined,
+        maximumStay: 30,
       },
       availability: [{
         startDate: new Date(),
@@ -178,9 +178,9 @@ export default function CreatePropertyPage() {
     
     try {
       const result = await createProperty(data);
-      
+      console.log("created property ", result)
       if (result.success) {
-        router.push(`/host/properties/${result.propertyId}`);
+        // router.push(`/host/properties/${result.propertyId}`);
       } else {
         setError(result.error || 'Failed to create property. Please try again.');
         setIsSubmitting(false);
