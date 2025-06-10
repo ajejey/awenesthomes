@@ -54,7 +54,8 @@ export default function AmenitiesForm() {
   
   // Log errors related to houseRules specifically from this component's perspective
   if (errors.houseRules) {
-    console.log("AMENITIES_FORM_LOG: Errors for 'houseRules' from formState:", JSON.stringify(errors.houseRules, null, 2));
+    console.log("AMENITIES_FORM_LOG: Potential error for 'houseRules'. Message:", errors.houseRules.message || "[No direct message]");
+    console.log("AMENITIES_FORM_LOG: 'houseRules' error object keys:", Object.keys(errors.houseRules));
   }
 
   // Watch the amenities array to check which ones are selected

@@ -155,18 +155,56 @@ export default function CreatePropertyPage() {
     console.log("--- FORM_VALIDATION_STATUS ---");
     console.log(`isValid: ${isValid}`);
 
-    const errorsString = JSON.stringify(errors, null, 2);
-    if (errorsString !== '{}') {
-      console.log("Detailed validation errors object:", errorsString);
-    } else {
-      console.log("Validation errors object: {} (No errors reported by react-hook-form)");
+    // Safer logging for errors object
+    console.log("Form errors object keys:", Object.keys(errors));
+    for (const key in errors) {
+      if (Object.prototype.hasOwnProperty.call(errors, key)) {
+        const errorField = errors[key];
+        if (errorField && typeof errorField.message === 'string') {
+          console.log(`Error for field '${key}': ${errorField.message}`);
+        } else if (errorField) {
+          // For nested errors like location.address, errorField might be an object of FieldErrors
+          let fieldErrorMessages = "";
+          for(const subKey in errorField){
+              if (Object.prototype.hasOwnProperty.call(errorField, subKey)) {
+                  const subErrorField = errorField[subKey];
+                  if (subErrorField && typeof subErrorField.message === 'string') {
+                      fieldErrorMessages += `${subKey}: ${subErrorField.message}; `;
+                  }
+              }
+          }
+          if(fieldErrorMessages){
+              console.log(`Error for field '${key}': { ${fieldErrorMessages}}`);
+          } else {
+               console.log(`Error for field '${key}' (details):`, errorField); // Fallback, still risky
+          }
+        }
+      }
     }
 
-    // Log current form data
+    // Safer logging for getValues()
     try {
-      console.log("Current form data snapshot:", JSON.stringify(getValues(), null, 2));
+      const formValues = getValues();
+      console.log("Current form data snapshot (keys):", Object.keys(formValues));
+      // Attempt to log individual values safely, especially for debugging
+      // For known complex fields, log selectively.
+      // For now, primarily log keys and a cautious stringify.
+      // If this still fails, we may need to iterate and log each field's value with individual try-catch.
+      console.log("Current form data (cautious stringify):", JSON.stringify(formValues, (key, value) => {
+          if (typeof value === 'object' && value !== null) {
+              if (value instanceof HTMLElement || value instanceof File || value instanceof EventTarget) { // Add other non-serializable types if known
+                  return '[Non-Serializable Object]';
+              }
+          }
+          return value;
+      }, 2));
+
     } catch (e) {
-      console.error("Error stringifying form data:", e);
+      console.error("Error processing form data for logging:", e.message);
+      const formValues = getValues();
+      if (formValues && typeof formValues === 'object') {
+          console.log("Form values keys (on error):", Object.keys(formValues));
+      }
     }
     console.log("------------------------------");
   }, [errors, isValid, getValues]); // Added getValues to the dependency array
@@ -191,7 +229,22 @@ export default function CreatePropertyPage() {
   // Handle form submission
   const onSubmit = async (data: PropertyFormData) => {
     console.log("--- ON_SUBMIT ---");
-    console.log("Form data at submission:", JSON.stringify(data, null, 2));
+    try {
+      // Assuming 'data' from Zod is safer, but apply caution
+      console.log("Form data at submission (cautious stringify):", JSON.stringify(data, (key, value) => {
+          if (typeof value === 'object' && value !== null) {
+               if (value instanceof HTMLElement || value instanceof File || value instanceof EventTarget) {
+                  return '[Non-Serializable Object]';
+              }
+          }
+          return value;
+      }, 2));
+    } catch (e) {
+      console.error("Error stringifying submitted data for logging:", e.message);
+      if (data && typeof data === 'object') {
+          console.log("Submitted data keys (on error):", Object.keys(data));
+      }
+    }
     setIsSubmitting(true);
     setError(null);
     
