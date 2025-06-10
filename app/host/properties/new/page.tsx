@@ -264,13 +264,7 @@ export default function CreatePropertyPage() {
       
       {/* Form */}
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
-            // Prevent form submission on Enter key press
-            if (e.key === 'Enter') {
-              e.preventDefault();
-            }
-          }}
-        >
+        <form onSubmit={handleSubmit(onSubmit)}>
           {/* Step title */}
           <h2 className="text-xl font-semibold mb-4">{steps[currentStep].title}</h2>
           
@@ -294,7 +288,7 @@ export default function CreatePropertyPage() {
               </div>
             </div>
           )}
-          
+
           {/* Navigation buttons */}
           <div className="flex justify-between">
             <button
@@ -310,7 +304,59 @@ export default function CreatePropertyPage() {
               Previous
             </button>
             
-            {currentStep < steps.length - 1 ? (
+            {/* Wrapper for right-side buttons to ensure stable DOM structure */}
+            <div>
+              {/* NEXT BUTTON - Hidden on the last step */}
+              <button
+                type="button"
+                onClick={handleNext}
+                className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  currentStep === steps.length - 1 ? 'hidden' : ''
+                }`}
+              >
+                Next
+              </button>
+
+              {/* SUBMIT BUTTON - Hidden until the last step */}
+              <button
+                type="submit"
+                disabled={isSubmitting || !isValid}
+                className={`px-4 py-2 rounded-md ${
+                  isSubmitting || !isValid
+                    ? 'bg-blue-300 text-white cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                } ${currentStep < steps.length - 1 ? 'hidden' : ''}`}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Submitting...
+                  </div>
+                ) : (
+                  'Submit Property'
+                )}
+              </button>
+            </div>
+          
+          {/* Navigation buttons */}
+          {/* <div className="flex justify-between">
+            <button
+              type="button"
+              onClick={handlePrevious}
+              disabled={currentStep === 0}
+              className={`px-4 py-2 rounded-md ${
+                currentStep === 0
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Previous
+            </button> */}
+            
+            {/* {currentStep < steps.length - 1 ? (
               <button
                 type="button"
                 onClick={handleNext}
@@ -340,7 +386,7 @@ export default function CreatePropertyPage() {
                   'Submit Property'
                 )}
               </button>
-            )}
+            )} */}
           </div>
         </form>
       </FormProvider>
