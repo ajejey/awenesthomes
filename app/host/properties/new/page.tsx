@@ -180,7 +180,8 @@ export default function CreatePropertyPage() {
       const result = await createProperty(data);
       console.log("created property ", result)
       if (result.success) {
-        // router.push(`/host/properties/${result.propertyId}`);
+        router.refresh();
+        router.push(`/host/properties/${result.propertyId}`);
       } else {
         setError(result.error || 'Failed to create property. Please try again.');
         setIsSubmitting(false);

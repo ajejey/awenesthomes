@@ -119,6 +119,9 @@ export async function createProperty(formData: PropertyFormData) {
     
     // Revalidate the properties page
     revalidatePath('/host/properties');
+    revalidatePath(`/host/properties/${property._id instanceof mongoose.Types.ObjectId 
+        ? property._id.toString() 
+        : String(property._id)}`); // For the new detail page
     revalidatePath('/')
     
     return {
