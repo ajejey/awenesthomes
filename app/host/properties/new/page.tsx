@@ -206,6 +206,27 @@ export default function CreatePropertyPage() {
           console.log("Form values keys (on error):", Object.keys(formValues));
       }
     }
+
+    // Direct Zod schema parsing for debugging
+    console.log("--- ZOD_SAFE_PARSE_DEBUG ---");
+    const currentFormData = getValues();
+    const parseResult = propertyFormSchema.safeParse(currentFormData);
+    if (parseResult.success) {
+      console.log("Zod safeParse result: SUCCESS");
+      // Optionally log stringified success data if needed, but usually not for success
+      // console.log("Parsed data:", JSON.stringify(parseResult.data, null, 2));
+    } else {
+      console.log("Zod safeParse result: FAILED");
+      // Log the full Zod error object. This is crucial.
+      // Using a custom replacer for ZodError if it also contains complex objects, though less common.
+      try {
+          console.log("Zod error details:", JSON.stringify(parseResult.error, null, 2));
+      } catch (e) {
+          console.error("Error stringifying Zod error details:", e);
+          console.log("Zod error raw:", parseResult.error); // Fallback
+      }
+    }
+    console.log("--- END_ZOD_SAFE_PARSE_DEBUG ---");
     console.log("------------------------------");
   }, [errors, isValid, getValues]); // Added getValues to the dependency array
   
