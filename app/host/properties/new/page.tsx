@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -149,7 +149,27 @@ export default function CreatePropertyPage() {
   });
   
   // Get form state from react-hook-form
-  const { handleSubmit, formState: { errors, isValid } } = methods;
+  const { handleSubmit, formState: { errors, isValid }, getValues } = methods; // Ensure getValues is destructured
+
+  useEffect(() => {
+    console.log("--- FORM_VALIDATION_STATUS ---");
+    console.log(`isValid: ${isValid}`);
+
+    const errorsString = JSON.stringify(errors, null, 2);
+    if (errorsString !== '{}') {
+      console.log("Detailed validation errors object:", errorsString);
+    } else {
+      console.log("Validation errors object: {} (No errors reported by react-hook-form)");
+    }
+
+    // Log current form data
+    try {
+      console.log("Current form data snapshot:", JSON.stringify(getValues(), null, 2));
+    } catch (e) {
+      console.error("Error stringifying form data:", e);
+    }
+    console.log("------------------------------");
+  }, [errors, isValid, getValues]); // Added getValues to the dependency array
   
   // Handle next step
   const handleNext = () => {
@@ -166,13 +186,12 @@ export default function CreatePropertyPage() {
       window.scrollTo(0, 0);
     }
   };
-
-  console.log("errors", errors);
-  console.log("isValid", isValid);
   
   
   // Handle form submission
   const onSubmit = async (data: PropertyFormData) => {
+    console.log("--- ON_SUBMIT ---");
+    console.log("Form data at submission:", JSON.stringify(data, null, 2));
     setIsSubmitting(true);
     setError(null);
     

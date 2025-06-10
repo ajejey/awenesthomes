@@ -52,6 +52,11 @@ const amenityCategories = [
 export default function AmenitiesForm() {
   const { register, formState: { errors }, setValue, watch, getValues } = useFormContext();
   
+  // Log errors related to houseRules specifically from this component's perspective
+  if (errors.houseRules) {
+    console.log("AMENITIES_FORM_LOG: Errors for 'houseRules' from formState:", JSON.stringify(errors.houseRules, null, 2));
+  }
+
   // Watch the amenities array to check which ones are selected
   const selectedAmenities = watch('amenities') || [];
   
@@ -70,7 +75,11 @@ export default function AmenitiesForm() {
   // Update form value when rules change
   useEffect(() => {
     setValue('houseRules', rules, { shouldValidate: true });
-  }, [rules, setValue]);
+    console.log("AMENITIES_FORM_LOG: houseRules updated in form state via setValue. Current local 'rules':", rules);
+    // It might be slightly delayed for getValues to reflect immediately after setValue depending on react-hook-form's update cycle,
+    // but let's log it to see.
+    console.log("AMENITIES_FORM_LOG: getValues('houseRules') after update:", getValues('houseRules'));
+  }, [rules, setValue, getValues]); // Added getValues to dependency array
   
   // Add a new rule
   const addRule = () => {
