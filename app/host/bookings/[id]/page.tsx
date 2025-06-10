@@ -24,7 +24,7 @@ export default async function BookingDetailsPage({
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header with navigation */}
-        <div className="bg-white shadow-sm mb-6">
+        {/* <div className="bg-white shadow-sm mb-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16 items-center">
               <h1 className="text-xl font-semibold text-gray-900">Host Dashboard</h1>
@@ -56,7 +56,7 @@ export default async function BookingDetailsPage({
               </nav>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Back button */}
         <div className="mb-6">
