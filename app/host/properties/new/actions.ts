@@ -119,6 +119,7 @@ export async function createProperty(formData: PropertyFormData) {
     
     // Revalidate the properties page
     revalidatePath('/host/properties');
+    revalidatePath('/')
     
     return {
       success: true,
