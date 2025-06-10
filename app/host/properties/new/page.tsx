@@ -264,7 +264,13 @@ export default function CreatePropertyPage() {
       
       {/* Form */}
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
+            // Prevent form submission on Enter key press
+            if (e.key === 'Enter') {
+              e.preventDefault();
+            }
+          }}
+        >
           {/* Step title */}
           <h2 className="text-xl font-semibold mb-4">{steps[currentStep].title}</h2>
           
