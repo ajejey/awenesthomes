@@ -102,6 +102,7 @@ export async function createBooking(formData: FormData) {
 
     // Handle guest user - either find existing user by email or create a new one
     let guestId;
+    let requiresOtpVerification = false; // Initialize requiresOtpVerification
     if (user) {
       // Use the authenticated user's ID
       // Type assertion for UserJwtPayload which may not have _id directly
@@ -110,12 +111,12 @@ export async function createBooking(formData: FormData) {
     } else if (email) {
       console.log('Email while creating booking:', email);
       // Check if a user with this email already exists
-      let guestUser = await User.findOne({ email });
+      let existingUser = await User.findOne({ email }); // Renamed guestUser to existingUser
       
-      if (!guestUser) {
+      if (!existingUser) {
         console.log('Guest user not found, creating new guest user');
         // Create a new guest user
-        guestUser = await User.create({
+        existingUser = await User.create({
           email,
           name: name || 'Guest',
           phone,
@@ -134,10 +135,20 @@ export async function createBooking(formData: FormData) {
           if (!otpResult.success) {
             console.error('Failed to send OTP:', otpResult.error);
           }
+          requiresOtpVerification = true; // Set requiresOtpVerification
         }
+      } else if (createAccount && existingUser && !existingUser.emailVerified) {
+        // Existing user who is not verified and opted to create account
+        console.log('Existing unverified user opted to create account, sending OTP');
+        const otpResult = await sendOTP(email); // Send OTP
+        console.log('OTP result for existing unverified user:', otpResult);
+        if (!otpResult.success) {
+          console.error('Failed to send OTP for existing unverified user:', otpResult.error);
+        }
+        requiresOtpVerification = true; // Set requiresOtpVerification
       }
       
-      guestId = guestUser._id;
+      guestId = existingUser._id;
     } else {
       return { success: false, message: 'Guest email is required' };
     }
@@ -199,13 +210,13 @@ export async function createBooking(formData: FormData) {
       // Don't fail the booking creation if email fails
     }
 
-    // Return success with booking ID and account creation status
+    // Return success with booking ID and requiresOtpVerification status
     return { 
       success: true, 
       bookingId: (newBooking._id as unknown as { toString(): string }).toString(), // Type assertion for MongoDB ObjectId
-      accountCreated: !user && createAccount,
-      message: !user && createAccount ? 
-        'Your booking has been created and a verification email has been sent to your email address.' : 
+      requiresOtpVerification, // Add requiresOtpVerification to return
+      message: requiresOtpVerification ?
+        'Your booking has been created and an OTP has been sent to your email address for verification.' :
         'Your booking has been created successfully.'
     };
   } catch (error: any) {

@@ -239,16 +239,8 @@ export default function BookingForm({
 
       // Handle response and navigate to confirmation page
       if (response && response.success && response.bookingId) {
-        // If this is a guest booking with account creation, add accountCreationPending flag
-        if (!user && formData.hasOwnProperty('createAccount')) {
-          const guestData = formData as unknown as GuestBookingFormInput;
-          if (guestData.createAccount) {
-            router.push(`/bookings/${response.bookingId}/confirmation?accountCreationPending=true`);
-            return;
-          }
-        }
-        // Standard redirect for regular bookings
-        router.push(`/bookings/${response.bookingId}/confirmation`);
+        // Redirect to confirmation page with requiresOtpVerification status
+        router.push(`/bookings/${response.bookingId}/confirmation?requiresOtpVerification=${response.requiresOtpVerification}`);
       } else {
         throw new Error(response?.message || 'Invalid response from server');
       }

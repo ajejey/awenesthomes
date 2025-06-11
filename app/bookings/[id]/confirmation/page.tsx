@@ -9,7 +9,7 @@ type BookingConfirmationPageProps = {
     id: string;
   };
   searchParams: {
-    accountCreationPending?: string;
+    requiresOtpVerification?: string; // Updated searchParam
   };
 }
 
@@ -27,8 +27,8 @@ export default async function BookingConfirmationPage({ params, searchParams }: 
       notFound();
     }
 
-    // Check if account creation is pending from query params
-    const accountCreationPending = searchParams.accountCreationPending === 'true';
+    // Read requiresOtpVerification from searchParams and convert to boolean
+    const showOtp = searchParams.requiresOtpVerification === 'true';
     
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -36,7 +36,7 @@ export default async function BookingConfirmationPage({ params, searchParams }: 
           <BookingConfirmationDetails 
             booking={booking} 
             user={user} 
-            accountCreationPending={accountCreationPending} 
+            showOtpSection={showOtp} // Pass showOtp as showOtpSection
           />
         </Suspense>
       </div>

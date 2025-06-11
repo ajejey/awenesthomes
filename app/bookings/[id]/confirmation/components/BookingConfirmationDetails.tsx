@@ -21,10 +21,10 @@ import { useRouter } from 'next/navigation';
 interface BookingConfirmationDetailsProps {
   booking: any;
   user: any | null; // User can be null for guest bookings
-  accountCreationPending?: boolean; // Whether the user opted to create an account during booking
+  showOtpSection: boolean; // Renamed prop
 }
 
-export default function BookingConfirmationDetails({ booking, user, accountCreationPending = false }: BookingConfirmationDetailsProps) {
+export default function BookingConfirmationDetails({ booking, user, showOtpSection }: BookingConfirmationDetailsProps) {
   // Get guest email safely from the booking object
   const guestEmail = booking.guestId?.email || '';
   const router = useRouter();
@@ -156,7 +156,7 @@ export default function BookingConfirmationDetails({ booking, user, accountCreat
       </div>
 
       {/* OTP Verification Section for guest users who opted to create an account */}
-      {!user && accountCreationPending && guestEmail && (
+      {!user && showOtpSection && guestEmail && ( // Updated condition
         <div className="px-6 py-4">
           <OtpVerification email={guestEmail} bookingId={booking._id} otpSuccess={otpSuccess} setOtpSuccess={setOtpSuccess} />
         </div>
