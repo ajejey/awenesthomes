@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/app/auth';
-import { BookingsList, BookingsListSkeleton, BookingsTabs } from './components';
+import { BookingsList, BookingsListSkeleton, BookingsTabs, GovernmentIdStatus } from './components';
 
 export default async function BookingsPage({
   searchParams,
@@ -22,6 +22,9 @@ export default async function BookingsPage({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Your Bookings</h1>
+      
+      {/* Government ID Status Section */}
+      <GovernmentIdStatus userId={user.id} />
       
       {/* Tabs for different booking views */}
       <BookingsTabs activeTab={activeTab} />

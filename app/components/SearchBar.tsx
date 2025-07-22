@@ -6,6 +6,7 @@ import DateRangePicker from './DateRangePicker';
 import { ISearchParams } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface SearchBarProps {
   defaultLocation?: string;
@@ -38,7 +39,11 @@ export default function SearchBar({
   compact = false
 }: SearchBarProps) {
   const router = useRouter();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<'location' | 'dates' | 'guests' | null>(null);
+  
   const [searchParams, setSearchParams] = useState<ISearchParams>({
     location: defaultLocation,
     checkIn: defaultCheckIn ? new Date(defaultCheckIn).toISOString().split('T')[0] : undefined,
@@ -61,6 +66,7 @@ export default function SearchBar({
   const guestDropdownRef = useRef<HTMLDivElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
   const locationDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileSearchModalRef = useRef<HTMLDivElement>(null);
 
   // Mock location suggestions based on user input
   const getMockSuggestions = (query: string): LocationSuggestion[] => {
@@ -132,13 +138,24 @@ export default function SearchBar({
           locationInputRef.current !== event.target) {
         setShowLocationSuggestions(false);
       }
+
+      // Handle mobile search modal clicks outside
+      if (isMobile && mobileSearchModalRef.current && 
+          !mobileSearchModalRef.current.contains(event.target as Node)) {
+        // Don't close if clicking on the mobile search trigger button
+        const targetElement = event.target as HTMLElement;
+        if (!targetElement.closest('.mobile-search-trigger')) {
+          setMobileSearchOpen(false);
+          setActiveSection(null);
+        }
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isMobile]);
   
   // Update total guests count when individual counts change
   useEffect(() => {
@@ -205,12 +222,327 @@ export default function SearchBar({
     router.push(newUrl, { scroll: false });
   };
 
-  return (
-    <div className={`w-full ${compact ? 'max-w-3xl' : 'max-w-4xl'} mx-auto`}>
-      <form 
-        onSubmit={handleSubmit}
-        className={`bg-white rounded-full shadow-md flex flex-col md:flex-row items-center p-2 ${isExpanded ? 'md:rounded-lg' : 'md:rounded-full'}`}
+  // Render mobile collapsed search bar
+  const renderMobileCollapsedSearch = () => {
+    return (
+      <div 
+        className="bg-white rounded-full shadow-md p-2 flex items-center mobile-search-trigger"
+        onClick={() => {
+          setMobileSearchOpen(true);
+          setActiveSection('location'); // Set default active section
+        }}
       >
+        <div className="flex-1 flex items-center px-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+          </svg>
+          <div className="ml-3">
+            <div className="text-sm font-medium">
+              {searchParams.location ? searchParams.location : 'Where to?'}
+            </div>
+            <div className="text-xs text-gray-500 flex">
+              {searchParams.checkIn && searchParams.checkOut ? (
+                <span>
+                  {new Date(searchParams.checkIn).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})} - 
+                  {new Date(searchParams.checkOut).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}
+                </span>
+              ) : (
+                <span>Add dates</span>
+              )}
+              {searchParams.guests && searchParams.guests > 0 && <span className="mx-1">·</span>}
+              {searchParams.guests && searchParams.guests > 0 && (
+                <span>{searchParams.guests} {searchParams.guests === 1 ? 'guest' : 'guests'}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render mobile search modal
+  const renderMobileSearchModal = () => {
+    return (
+      <AnimatePresence>
+        {mobileSearchOpen && (
+          <>
+            {/* Overlay */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => {
+                setMobileSearchOpen(false);
+                setActiveSection(null);
+              }}
+            />
+            
+            {/* Modal */}
+            <motion.div 
+              ref={mobileSearchModalRef}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-x-0 top-0 bg-white rounded-b-xl shadow-lg z-50 p-4"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <button 
+                  type="button" 
+                  className="p-2 rounded-full hover:bg-gray-100"
+                  onClick={() => {
+                    setMobileSearchOpen(false);
+                    setActiveSection(null);
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                <h2 className="text-lg font-medium">Search</h2>
+                <div className="w-8"></div> {/* Empty div for centering */}
+              </div>
+              
+              <form onSubmit={handleSubmit}>
+                {/* Mobile search tabs */}
+                <div className="flex border-b border-gray-200 mb-4">
+                  <button
+                    type="button"
+                    className={`flex-1 py-2 text-center ${activeSection === 'location' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+                    onClick={() => setActiveSection('location')}
+                  >
+                    Where
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex-1 py-2 text-center ${activeSection === 'dates' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+                    onClick={() => setActiveSection('dates')}
+                  >
+                    When
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex-1 py-2 text-center ${activeSection === 'guests' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+                    onClick={() => setActiveSection('guests')}
+                  >
+                    Who
+                  </button>
+                </div>
+                
+                {/* Mobile section content */}
+                <div className="mb-4">
+                  {activeSection === 'location' && (
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="location"
+                          placeholder="Where are you going?"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={searchParams.location}
+                          onChange={handleInputChange}
+                        />
+                        {isTyping ? (
+                          <div className="mt-2 flex justify-center">
+                            <div className="animate-pulse flex space-x-2">
+                              <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
+                              <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
+                              <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
+                            </div>
+                          </div>
+                        ) : locationSuggestions.length > 0 ? (
+                          <div className="mt-2 bg-white rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {locationSuggestions.map(suggestion => (
+                              <button
+                                key={suggestion.id}
+                                type="button"
+                                className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-start"
+                                onClick={() => {
+                                  handleLocationSelect(suggestion);
+                                  setActiveSection('dates');
+                                }}
+                              >
+                                <div className="flex-shrink-0 mr-3">
+                                  {suggestion.type === 'city' && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                                    </svg>
+                                  )}
+                                  {suggestion.type === 'landmark' && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                                    </svg>
+                                  )}
+                                  {suggestion.type === 'area' && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium">{suggestion.name}</p>
+                                  <p className="text-sm text-gray-500">{suggestion.region}</p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {activeSection === 'dates' && (
+                    <div className="space-y-4">
+                      <DateRangePicker
+                        startDate={searchParams.checkIn ? new Date(searchParams.checkIn) : null}
+                        endDate={searchParams.checkOut ? new Date(searchParams.checkOut) : null}
+                        onDatesChange={handleDatesChange}
+                        startPlaceholder="Check in"
+                        endPlaceholder="Check out"
+                        minDays={1}
+                        maxDays={90}
+                      />
+                    </div>
+                  )}
+                  
+                  {activeSection === 'guests' && (
+                    <div className="space-y-4">
+                      {/* Adults */}
+                      <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                        <div>
+                          <p className="font-medium">Adults</p>
+                          <p className="text-sm text-gray-500">Ages 13 or above</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button 
+                            type="button"
+                            onClick={() => handleGuestChange('adults', false)}
+                            disabled={guestCounts.adults <= 1}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center border ${guestCounts.adults <= 1 ? 'border-gray-200 text-gray-300' : 'border-gray-400 text-gray-600 hover:border-gray-700'}`}
+                          >
+                            <span className="text-lg">-</span>
+                          </button>
+                          <span className="w-6 text-center">{guestCounts.adults}</span>
+                          <button 
+                            type="button"
+                            onClick={() => handleGuestChange('adults', true)}
+                            className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-400 text-gray-600 hover:border-gray-700"
+                          >
+                            <span className="text-lg">+</span>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Children */}
+                      <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                        <div>
+                          <p className="font-medium">Children</p>
+                          <p className="text-sm text-gray-500">Ages 2-12</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button 
+                            type="button"
+                            onClick={() => handleGuestChange('children', false)}
+                            disabled={guestCounts.children <= 0}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center border ${guestCounts.children <= 0 ? 'border-gray-200 text-gray-300' : 'border-gray-400 text-gray-600 hover:border-gray-700'}`}
+                          >
+                            <span className="text-lg">-</span>
+                          </button>
+                          <span className="w-6 text-center">{guestCounts.children}</span>
+                          <button 
+                            type="button"
+                            onClick={() => handleGuestChange('children', true)}
+                            className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-400 text-gray-600 hover:border-gray-700"
+                          >
+                            <span className="text-lg">+</span>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Infants */}
+                      <div className="flex items-center justify-between py-3 border-b border-gray-200">
+                        <div>
+                          <p className="font-medium">Infants</p>
+                          <p className="text-sm text-gray-500">Under 2</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button 
+                            type="button"
+                            onClick={() => handleGuestChange('infants', false)}
+                            disabled={guestCounts.infants <= 0}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center border ${guestCounts.infants <= 0 ? 'border-gray-200 text-gray-300' : 'border-gray-400 text-gray-600 hover:border-gray-700'}`}
+                          >
+                            <span className="text-lg">-</span>
+                          </button>
+                          <span className="w-6 text-center">{guestCounts.infants}</span>
+                          <button 
+                            type="button"
+                            onClick={() => handleGuestChange('infants', true)}
+                            className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-400 text-gray-600 hover:border-gray-700"
+                          >
+                            <span className="text-lg">+</span>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Pets */}
+                      <div className="flex items-center justify-between py-3">
+                        <div>
+                          <p className="font-medium">Pets</p>
+                          <p className="text-sm text-gray-500 hover:underline cursor-pointer">Bringing a service animal?</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <button 
+                            type="button"
+                            onClick={() => handleGuestChange('pets', false)}
+                            disabled={guestCounts.pets <= 0}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center border ${guestCounts.pets <= 0 ? 'border-gray-200 text-gray-300' : 'border-gray-400 text-gray-600 hover:border-gray-700'}`}
+                          >
+                            <span className="text-lg">-</span>
+                          </button>
+                          <span className="w-6 text-center">{guestCounts.pets}</span>
+                          <button 
+                            type="button"
+                            onClick={() => handleGuestChange('pets', true)}
+                            className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-400 text-gray-600 hover:border-gray-700"
+                          >
+                            <span className="text-lg">+</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Mobile search button */}
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Search
+                </button>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    );
+  };
+
+  return (
+    <div className={`w-full ${compact ? 'max-w-3xl' : 'max-w-4xl'} mx-auto relative`}>
+      {/* Mobile search modal */}
+      {isMobile && renderMobileSearchModal()}
+      
+      {/* Main search bar */}
+      {isMobile ? (
+        renderMobileCollapsedSearch()
+      ) : (
+        <form 
+          onSubmit={handleSubmit}
+          className={`bg-white rounded-full shadow-md flex flex-col md:flex-row items-center p-2 ${isExpanded ? 'md:rounded-lg' : 'md:rounded-full'}`}
+        >
         <div className="flex-1 min-w-0 px-4 py-2 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-auto relative" ref={locationDropdownRef}>
           <label htmlFor="location" className="block text-xs font-medium text-gray-700">Where</label>
           <input
@@ -469,6 +801,7 @@ export default function SearchBar({
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ interface GuestInfoProps {
     id: string;
     name: string;
     email: string;
+    phone: string;
   };
 }
 
@@ -34,6 +35,12 @@ export default function GuestInfo({ guest }: GuestInfoProps) {
             <dt className="text-sm font-medium text-gray-500">Email</dt>
             <dd className="mt-1 text-sm text-gray-900">
               {guest.email || 'Email not provided'}
+            </dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-sm font-medium text-gray-500">Phone</dt>
+            <dd className="mt-1 text-sm text-gray-900">
+              {guest.phone || 'Phone not provided'}
             </dd>
           </div>
         </dl>

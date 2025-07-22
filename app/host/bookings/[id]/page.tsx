@@ -6,6 +6,7 @@ import BookingDetails from './components/BookingDetails';
 import BookingActions from './components/BookingActions';
 import PropertySnapshot from './components/PropertySnapshot';
 import GuestInfo from './components/GuestInfo';
+import GuestIdVerification from './components/GuestIdVerification';
 
 export const metadata = {
   title: 'Booking Details | AweNestHomes',
@@ -20,6 +21,7 @@ export default async function BookingDetailsPage({
   try {
     // Fetch booking details
     const booking = await getBookingById(params.id);
+    console.log("booking ", booking)
 
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -93,6 +95,26 @@ export default async function BookingDetailsPage({
           {/* Main booking details */}
           <div className="lg:col-span-2 space-y-6">
             <BookingDetails booking={booking} />
+            
+            {/* Show Government ID verification section when status is pending_id_verification */}
+            {booking.status === 'pending_id_verification' && (
+              <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div className="px-4 py-5 sm:px-6 bg-blue-50">
+                  <h3 className="text-lg leading-6 font-medium text-blue-900">Government ID Verification Required</h3>
+                  <p className="mt-1 max-w-2xl text-sm text-blue-600">
+                    This booking requires government ID verification before it can be confirmed.
+                  </p>
+                </div>
+                <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
+                  <GuestIdVerification 
+                    guestId={booking.guestId.toString()} 
+                    bookingId={booking._id.toString()} 
+                    bookingStatus={booking.status} 
+                  />
+                </div>
+              </div>
+            )}
+            
             <BookingActions booking={booking} />
           </div>
 
@@ -112,6 +134,7 @@ export default async function BookingDetailsPage({
               id: booking.guestId,
               name: booking.guestName || '',
               email: booking.guestEmail || '',
+              phone: booking.guestPhone || '',
             }} />
           </div>
         </div>

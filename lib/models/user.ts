@@ -1,6 +1,17 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import { UserRole } from '../../app/auth';
 
+// Government ID interface
+export interface IGovernmentId {
+  type: string; // passport, driver's license, national ID, etc.
+  number?: string; // ID number
+  imageUrl: string; // URL to the uploaded ID image
+  isVerified: boolean; // Whether the ID has been verified by a host
+  verifiedAt?: Date; // When the ID was verified
+  verifiedBy?: mongoose.Types.ObjectId; // Which host verified the ID
+  uploadedAt: Date; // When the ID was uploaded
+}
+
 // User interface
 export interface IUser extends Document {
   email: string;
@@ -9,6 +20,7 @@ export interface IUser extends Document {
   profileImage?: string;
   phone?: string;
   isVerified: boolean;
+  governmentId?: IGovernmentId; // Government ID information
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,27 +41,39 @@ const UserSchema = new Schema<IUser>(
       required: true,
       unique: true,
       trim: true,
-      lowercase: true,
+      lowercase: true
     },
     name: {
       type: String,
-      trim: true,
+      trim: true
     },
     role: {
       type: String,
       enum: ['guest', 'host', 'admin'],
-      default: 'guest',
+      default: 'guest'
     },
     profileImage: {
-      type: String,
+      type: String
     },
     phone: {
       type: String,
-      trim: true,
+      trim: true
     },
     isVerified: {
       type: Boolean,
-      default: false,
+      default: false
+    },
+    governmentId: {
+      type: new Schema({
+        type: { type: String, enum: ['aadhar', 'pan_card', 'passport', 'driver_license', 'other'] },
+        number: { type: String },
+        imageUrl: { type: String },
+        isVerified: { type: Boolean, default: false },
+        verifiedAt: { type: Date },
+        verifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+        uploadedAt: { type: Date }
+      }),
+      required: false
     },
   },
   {
@@ -64,20 +88,20 @@ const OTPSchema = new Schema<IOTP>(
       type: String,
       required: true,
       trim: true,
-      lowercase: true,
+      lowercase: true
     },
     otp: {
       type: String,
-      required: true,
+      required: true
     },
     createdAt: {
       type: Date,
       default: Date.now,
-      expires: 600, // OTP expires after 10 minutes
+      expires: 600 // OTP expires after 10 minutes
     },
     expiresAt: {
       type: Date,
-      required: true,
+      required: true
     },
   }
 );

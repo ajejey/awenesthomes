@@ -14,12 +14,13 @@ type BookingConfirmationPageProps = {
 }
 
 export default async function BookingConfirmationPage({ params, searchParams }: BookingConfirmationPageProps) {
+  const { id } = await params;
   // Get the current user (may be null for guest bookings)
   const user = await getCurrentUser();
 
   try {
     // Fetch the booking details
-    const booking = await getBookingById(params.id);
+    const booking = await getBookingById(id);
     
     // For authenticated users, check if they are authorized to view this booking
     // For guests, we allow access to the confirmation page directly via the booking ID

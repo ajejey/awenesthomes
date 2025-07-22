@@ -3,6 +3,7 @@ import { z } from 'zod';
 // Define booking status types as Zod enum
 export const BookingStatusSchema = z.enum([
   'pending',
+  'pending_id_verification',
   'confirmed',
   'completed',
   'cancelled_by_guest',

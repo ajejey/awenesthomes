@@ -3,19 +3,21 @@
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { differenceInDays, parseISO } from 'date-fns';
+import { parseISO, differenceInDays } from 'date-fns';
 
-import { requireAuth, getCurrentUser } from '../auth';
 import dbConnect from '@/lib/db';
 import Booking from '@/lib/models/booking';
 import Property from '@/lib/models/property';
 import { User } from '@/lib/models/user';
 import { BookingStatusSchema, PaymentStatusSchema } from '@/lib/schemas/booking';
+import { BookingStatus } from '@/lib/models/booking';
 import { GuestBookingFormSchema } from '@/lib/schemas/guestBooking';
 
 // Import OTP and email functions
-import { sendOTP } from '@/app/auth/login/actions';
+import { getCurrentUser } from '@/app/auth';
 import { sendBookingConfirmationEmail } from '@/lib/email';
+import { sendOTP } from '@/app/auth/login/actions';
+import { checkGovernmentIdStatus } from '@/app/users/actions';
 
 // Schema for booking creation
 const createBookingSchema = z.object({
@@ -34,6 +36,8 @@ type CreateBookingInput = z.infer<typeof createBookingSchema>;
  */
 export async function createBooking(formData: FormData) {
   try {
+    // Track if this is an existing verified user
+    let isExistingUserVerified = false;
     // Connect to the database
     await dbConnect();
 
@@ -73,6 +77,7 @@ export async function createBooking(formData: FormData) {
       return { success: false, message: 'Property not found' };
     }
 
+    // TODO: Check if property is available for the selected dates
     // Check if property is available for the selected dates
     // This would be implemented in a real application
     // For now, we'll assume it's available
@@ -112,6 +117,8 @@ export async function createBooking(formData: FormData) {
       // Check if a user with this email already exists
       let guestUser = await User.findOne({ email });
       
+      // Check if this is an existing verified user
+      
       if (!guestUser) {
         console.log('Guest user not found, creating new guest user');
         // Create a new guest user
@@ -120,7 +127,7 @@ export async function createBooking(formData: FormData) {
           name: name || 'Guest',
           phone,
           role: 'guest',
-          emailVerified: false,
+          isVerified: false,
           createdAt: new Date(),
           updatedAt: new Date(),
         });
@@ -135,6 +142,20 @@ export async function createBooking(formData: FormData) {
             console.error('Failed to send OTP:', otpResult.error);
           }
         }
+      } else {
+        // Check if the existing user is already verified
+        isExistingUserVerified = guestUser.isVerified === true;
+        console.log('Existing user found, isVerified status:', isExistingUserVerified);
+        
+        // If user is not verified and opted to create an account, send OTP
+        if (createAccount && !isExistingUserVerified) {
+          console.log('Existing unverified user opted to create an account, sending OTP');
+          const otpResult = await sendOTP(email);
+          console.log('OTP result:', otpResult);
+          if (!otpResult.success) {
+            console.error('Failed to send OTP:', otpResult.error);
+          }
+        }
       }
       
       guestId = guestUser._id;
@@ -142,6 +163,18 @@ export async function createBooking(formData: FormData) {
       return { success: false, message: 'Guest email is required' };
     }
 
+    // Check if the guest has a verified government ID
+    const idStatus = await checkGovernmentIdStatus(guestId ? guestId.toString() : undefined);
+    console.log('Government ID status:', idStatus);
+    
+    // Determine the booking status based on government ID verification
+    let bookingStatus = 'pending' as BookingStatus;
+    
+    // If the user has no government ID or it's not verified, set status to pending_id_verification
+    if (!idStatus.success || !idStatus.hasGovernmentId || !idStatus.isVerified) {
+      bookingStatus = 'pending_id_verification' as BookingStatus;
+    }
+    
     // Create the booking
     const newBooking = await Booking.create({
       propertyId,
@@ -160,7 +193,7 @@ export async function createBooking(formData: FormData) {
       totalAmount,
       discountAmount: 0,
       discountType: 'none',
-      status: BookingStatusSchema.enum.pending,
+      status: bookingStatus,
       paymentStatus: PaymentStatusSchema.enum.pending,
       specialRequests,
       // Store guest information directly in the booking for convenience
@@ -199,14 +232,12 @@ export async function createBooking(formData: FormData) {
       // Don't fail the booking creation if email fails
     }
 
-    // Return success with booking ID and account creation status
-    return { 
-      success: true, 
+    // Return success with booking ID and user verification status for redirection
+    return {
+      success: true,
       bookingId: (newBooking._id as unknown as { toString(): string }).toString(), // Type assertion for MongoDB ObjectId
-      accountCreated: !user && createAccount,
-      message: !user && createAccount ? 
-        'Your booking has been created and a verification email has been sent to your email address.' : 
-        'Your booking has been created successfully.'
+      message: 'Booking created successfully',
+      isExistingUserVerified: !user && email ? isExistingUserVerified : false,
     };
   } catch (error: any) {
     console.error('Error creating booking:', error);
@@ -293,7 +324,7 @@ export async function getBookingById(bookingId: string) {
     const booking = await Booking.findById(bookingId)
       .populate('propertyId', 'title images location')
       .populate('hostId', 'name email profileImage')
-      .populate('guestId', 'name email profileImage');
+      .populate('guestId', 'name email phone profileImage');
     
     if (!booking) {
       throw new Error('Booking not found');

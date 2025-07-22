@@ -349,6 +349,14 @@ const emailTemplates = {
           <p>You can view your booking details and manage your reservation from your account.</p>
           <a href="https://aweneshomes.com/bookings/${bookingDetails.id}" class="button">View Booking</a>
           
+          ${bookingDetails.requiresIdVerification ? `
+          <div style="margin-top: 30px; padding: 15px; border-left: 4px solid #f59e0b; background-color: #fef3c7;">
+            <h3 style="margin-top: 0; color: #92400e;">Government ID Verification Required</h3>
+            <p style="color: #92400e;">To complete your booking, please upload a government-issued ID for verification. This helps ensure safety and trust for all our users.</p>
+            <a href="https://aweneshomes.com/bookings/${bookingDetails.id}/confirmation" class="button" style="background-color: #f59e0b;">Upload ID Now</a>
+          </div>
+          ` : ''}
+          
           <p style="margin-top: 30px;">Need help? Contact our support team at support@aweneshomes.com</p>
         </div>
         <div class="footer">
@@ -408,10 +416,19 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 
 // Send booking confirmation email
 export async function sendBookingConfirmationEmail(email: string, bookingDetails: any) {
+  // Check if the booking requires ID verification (status is pending_id_verification)
+  const requiresIdVerification = bookingDetails.status === 'pending_id_verification';
+  
+  // Add the ID verification flag to the booking details
+  const bookingDetailsWithIdStatus = {
+    ...bookingDetails,
+    requiresIdVerification
+  };
+  
   return sendEmail({
     to: email,
     subject: 'Booking Confirmation - AweNestHomes',
-    html: emailTemplates.bookingConfirmation(bookingDetails),
+    html: emailTemplates.bookingConfirmation(bookingDetailsWithIdStatus),
   });
 }
 

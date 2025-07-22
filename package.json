@@ -19,7 +19,7 @@
     "cloudinary": "^2.6.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "framer-motion": "^12.15.0",
+    "framer-motion": "^12.19.2",
     "jose": "^6.0.11",
     "lucide-react": "^0.511.0",
     "mongoose": "^8.15.1",
@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.53.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",

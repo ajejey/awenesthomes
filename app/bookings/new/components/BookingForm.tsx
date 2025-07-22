@@ -243,8 +243,13 @@ export default function BookingForm({
         if (!user && formData.hasOwnProperty('createAccount')) {
           const guestData = formData as unknown as GuestBookingFormInput;
           if (guestData.createAccount) {
-            router.push(`/bookings/${response.bookingId}/confirmation?accountCreationPending=true`);
-            return;
+            // Only show OTP verification if user is not already verified
+            if (!response.isExistingUserVerified) {
+              router.push(`/bookings/${response.bookingId}/confirmation?accountCreationPending=true`);
+              return;
+            }
+            // If user is already verified, just show standard confirmation
+            console.log('User already verified, skipping OTP verification');
           }
         }
         // Standard redirect for regular bookings

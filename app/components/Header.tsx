@@ -48,7 +48,7 @@ export default function Header() {
           </div>
 
           {/* Middle - Search Button (Mobile) */}
-          <div className="md:hidden flex-1 flex justify-center">
+          {/* <div className="md:hidden flex-1 flex justify-center">
             <button 
               className="group p-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center space-x-2 text-sm text-gray-700"
               onClick={() => {
@@ -61,7 +61,7 @@ export default function Header() {
               </svg>
               <span>Where to?</span>
             </button>
-          </div>
+          </div> */}
 
           {/* Right - User Menu */}
           <div className="flex items-center">

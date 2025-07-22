@@ -30,16 +30,16 @@ import { Building, Building2Icon, ShipWheelIcon } from 'lucide-react';
 
 // Data for categories
 const categories = [
-  { id: 'apartments', name: 'Apartments', icon: <BuildingOfficeIcon className="h-6 w-6" /> },
-  { id: 'houses', name: 'Independent Houses', icon: <HomeIcon className="h-6 w-6" /> },
-  { id: 'villas', name: 'Villas', icon: <BanknotesIcon className="h-6 w-6" /> },
-  { id: 'farmhouses', name: 'Farmhouses', icon: <BuildingLibraryIcon className="h-6 w-6" /> },
-  { id: 'bungalows', name: 'Bungalows', icon: <BuildingStorefrontIcon className="h-6 w-6" /> },
-  { id: 'cottages', name: 'Cottages', icon: <BuildingOffice2Icon className="h-6 w-6" /> },
-  { id: 'guesthouses', name: 'Guest Houses', icon: <AcademicCapIcon className="h-6 w-6" /> },
-  { id: 'boathouses', name: 'Boathouses', icon: <ShipWheelIcon className="h-6 w-6" /> },
-  { id: 'studio', name: 'Studio Apartments', icon: <Building2Icon className="h-6 w-6" /> },
-  { id: 'penthouses', name: 'Penthouses', icon: <Building className="h-6 w-6" /> },
+  { id: 'apartments', name: 'Apartments', icon: <BuildingOfficeIcon  /> },
+  { id: 'houses', name: 'Independent Houses', icon: <HomeIcon  /> },
+  { id: 'villas', name: 'Villas', icon: <BanknotesIcon  /> },
+  { id: 'farmhouses', name: 'Farmhouses', icon: <BuildingLibraryIcon  /> },
+  { id: 'bungalows', name: 'Bungalows', icon: <BuildingStorefrontIcon  /> },
+  { id: 'cottages', name: 'Cottages', icon: <BuildingOffice2Icon  /> },
+  { id: 'guesthouses', name: 'Guest Houses', icon: <AcademicCapIcon  /> },
+  { id: 'boathouses', name: 'Boathouses', icon: <ShipWheelIcon  /> },
+  { id: 'studio', name: 'Studio Apartments', icon: <Building2Icon  /> },
+  { id: 'penthouses', name: 'Penthouses', icon: <Building  /> },
 ];
 
 

@@ -180,7 +180,7 @@ export async function getBookingById(bookingId: string) {
     
     const booking: any = await Booking.findById(bookingId)
       .populate('propertyId', 'title description images location bedrooms beds bathrooms maxGuests amenities houseRules')
-      .populate('guestId', 'name email')
+      .populate('guestId', 'name email phone')
       .lean();
     
     if (!booking) {
@@ -217,6 +217,7 @@ export async function getBookingById(bookingId: string) {
       propertyHouseRules: booking?.propertyId?.houseRules,
       guestName: booking?.guestId?.name,
       guestEmail: booking?.guestId?.email,
+      guestPhone: booking?.guestId?.phone,
       checkIn: booking?.checkIn?.toISOString(),
       checkOut: booking?.checkOut?.toISOString(),
       createdAt: booking?.createdAt?.toISOString(),

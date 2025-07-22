@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 // Define booking status types
 export type BookingStatus = 
   | 'pending' 
+  | 'pending_id_verification' // New status for ID verification
   | 'confirmed' 
   | 'completed' 
   | 'cancelled_by_guest'
@@ -18,6 +19,18 @@ export type PaymentStatus =
   | 'failed';
 
 // Define booking interface
+// Define government ID interface
+export interface IGovernmentId {
+  type: string;
+  number?: string | null;
+  imageUrl: string;
+  isVerified: boolean;
+  uploadedAt: Date;
+  guestEmail: string;
+  verifiedAt?: Date;
+  verifiedBy?: mongoose.Types.ObjectId;
+}
+
 export interface IBooking extends Document {
   propertyId: mongoose.Types.ObjectId;
   guestId: mongoose.Types.ObjectId;
@@ -41,6 +54,7 @@ export interface IBooking extends Document {
   cancellationReason?: string;
   cancellationDate?: Date;
   refundAmount?: number;
+  guestGovernmentId?: IGovernmentId; // Government ID for guest bookings
   createdAt: Date;
   updatedAt: Date;
 }
@@ -123,7 +137,7 @@ const BookingSchema = new Schema<IBooking>(
     },
     status: { 
       type: String, 
-      enum: ['pending', 'confirmed', 'completed', 'cancelled_by_guest', 'cancelled_by_host', 'rejected'],
+      enum: ['pending', 'pending_id_verification', 'confirmed', 'completed', 'cancelled_by_guest', 'cancelled_by_host', 'rejected'],
       default: 'pending'
     },
     paymentStatus: { 
@@ -148,6 +162,20 @@ const BookingSchema = new Schema<IBooking>(
     refundAmount: { 
       type: Number,
       min: [0, 'Refund amount cannot be negative']
+    },
+    guestGovernmentId: {
+      type: new Schema(
+        {
+          type: { type: String, enum: ['aadhar', 'pan_card', 'passport', 'driver_license', 'other'] },
+          number: { type: String },
+          imageUrl: { type: String },
+          isVerified: { type: Boolean, default: false },
+          uploadedAt: { type: Date, default: Date.now },
+          guestEmail: { type: String },
+          guestPhone: { type: String }
+        },
+        { _id: false }
+      )
     }
   },
   { 
