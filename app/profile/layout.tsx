@@ -1,6 +1,11 @@
 import React from 'react';
+import { Metadata } from 'next';
 import { requireAuth } from '@/app/auth';
 import Header from '@/app/components/Header';
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function ProfileLayout({
   children,

@@ -1,16 +1,19 @@
 import React from 'react';
 import { Metadata } from 'next';
+import { requireAuth } from '@/app/auth';
 
 export const metadata: Metadata = {
   title: 'Become a Host - Awenest Homes',
   description: 'Share your space and earn extra income by becoming a host on Awenest Homes.',
 };
 
-export default function BecomeAHostLayout({
+export default async function BecomeAHostLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requireAuth();
+
   return (
     <div className="min-h-screen">
       {children}

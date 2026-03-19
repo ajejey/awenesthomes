@@ -1,6 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Metadata } from 'next';
+
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function AuthLayout({
   children,
@@ -14,7 +20,14 @@ export default function AuthLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <Link href="/" className="flex items-center">
-              <span className="text-xl font-bold text-blue-600">AweNestHomes</span>
+              <Image
+                src="/awenest-homes-logo-crop.png"
+                alt="AweNest Homes"
+                width={140}
+                height={40}
+                className="h-9 w-auto object-contain"
+                priority
+              />
             </Link>
             <nav className="flex space-x-4">
               <Link 

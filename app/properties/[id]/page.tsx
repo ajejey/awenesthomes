@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Metadata } from 'next';
 import { format } from 'date-fns';
 import { MapPinIcon, UserIcon, HomeIcon, StarIcon, CalendarIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { getProperty } from './actions';
@@ -13,16 +14,120 @@ import PropertyHost from './components/PropertyHost';
 import PropertyRules from './components/PropertyRules';
 import { BathIcon, Bed } from 'lucide-react';
 
-export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://awenesthomes.com';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const property = await getProperty(id);
+    const primaryImage = property.images.find((img: any) => img.isPrimary) || property.images[0];
+    const title = `${property.title} in ${property.location.city}, ${property.location.state}`;
+    const desc = property.description?.slice(0, 155) ||
+      `${property.propertyType} in ${property.location.city}. ${property.bedrooms} bed · ${property.bathrooms} bath · up to ${property.maxGuests} guests. From ₹${property.pricing.basePrice}/night.`;
+
+    return {
+      title,
+      description: desc,
+      openGraph: {
+        title,
+        description: desc,
+        type: 'website',
+        url: `${BASE_URL}/properties/${id}`,
+        images: primaryImage
+          ? [{ url: primaryImage.url, width: 1200, height: 630, alt: title }]
+          : [{ url: '/og-image.jpg', width: 1200, height: 630, alt: title }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description: desc,
+        images: primaryImage ? [primaryImage.url] : ['/og-image.jpg'],
+      },
+    };
+  } catch {
+    return { title: 'Property Not Found' };
+  }
+}
+
+export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   // Fetch property data
   const property = await getProperty(id);
-  
+
   // Get primary image
   const primaryImage = property.images.find((image: any) => image.isPrimary) || property.images[0];
-  
+
+  const propertyUrl = `${BASE_URL}/properties/${id}`;
+
+  const vacationRentalSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'VacationRental',
+    name: property.title,
+    description: property.description,
+    url: propertyUrl,
+    image: property.images.map((img: any) => img.url).filter(Boolean),
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: property.location.address || '',
+      addressLocality: property.location.city,
+      addressRegion: property.location.state,
+      postalCode: property.location.zipCode || '',
+      addressCountry: 'IN',
+    },
+    ...(property.location?.coordinates?.lat && {
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: property.location.coordinates.lat,
+        longitude: property.location.coordinates.lng,
+      },
+    }),
+    ...(property.rating && property.reviewCount && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: property.rating.toFixed(1),
+        reviewCount: property.reviewCount,
+        bestRating: '5',
+        worstRating: '1',
+      },
+    }),
+    numberOfRooms: property.bedrooms,
+    maximumAttendeeCapacity: property.maxGuests,
+    checkinTime: '14:00',
+    checkoutTime: '11:00',
+    amenityFeature: (property.amenities || []).map((amenity: string) => ({
+      '@type': 'LocationFeatureSpecification',
+      name: amenity,
+      value: true,
+    })),
+    offers: {
+      '@type': 'Offer',
+      price: property.pricing.basePrice,
+      priceCurrency: 'INR',
+      availability: 'https://schema.org/InStock',
+    },
+    ...(property.host?.name && {
+      host: {
+        '@type': 'Person',
+        name: property.host.name,
+        ...(property.host.image && { image: property.host.image }),
+      },
+    }),
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: `${property.location.city} Rentals`, item: `${BASE_URL}/?location=${encodeURIComponent(property.location.city)}` },
+      { '@type': 'ListItem', position: 3, name: property.title },
+    ],
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(vacationRentalSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {/* Property title and basic info */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>

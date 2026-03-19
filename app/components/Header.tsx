@@ -43,7 +43,24 @@ export default function Header() {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center">
-              <span className="text-blue-600 font-bold text-2xl" style={{ fontFamily: 'var(--font-poppins)' }}>AweNestHomes</span>
+              {/* Full logo with name + tagline — desktop */}
+              <Image
+                src="/awenest-homes-logo-crop.png"
+                alt="AweNest Homes — Where Every Stay Is A Journey To Awe"
+                width={192}
+                height={55}
+                className="hidden md:block h-12 w-auto object-contain"
+                priority
+              />
+              {/* Icon only — mobile */}
+              <Image
+                src="/awenest-homes-logo-short.png"
+                alt="AweNest Homes"
+                width={40}
+                height={40}
+                className="block md:hidden h-10 w-auto object-contain"
+                priority
+              />
             </Link>
           </div>
 
